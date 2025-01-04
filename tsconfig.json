@@ -6,7 +6,9 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "jsx": "react-jsx",
+    "allowSyntheticDefaultImports": true,
   },
   "include": [
     "**/*.ts",
