@@ -17,12 +17,27 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
-          title: "Home",
+          title: "Dashboard",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "home-sharp" : "home-outline"}
+              name={
+                focused ? "bar-chart" : "bar-chart-outline"
+              }
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Timer",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "timer" : "timer-outline"}
               color={color}
               size={24}
             />
@@ -32,11 +47,11 @@ export default function TabLayout() {
       <Tabs.Screen
         name="about"
         options={{
-          title: "About",
+          title: "Log",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={
-                focused ? "information-circle" : "information-circle-outline"
+                focused ? "footsteps" : "footsteps-outline"
               }
               color={color}
               size={24}
