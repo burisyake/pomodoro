@@ -32,7 +32,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="timer"
+        name="timer/index"
         options={{
           title: "Timer",
           tabBarIcon: ({ color, focused }) => (
