@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-export default function Index() {
-  const [time, setTime] = useState(0);
+export default function PomodoroScreen() {
+  const [time, setTime] = useState(100);
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     if(isRunning){
       interval = setInterval(() => {
-        setTime((prevTime) => prevTime + 1);
+        setTime((prevTime) => prevTime - 1);
       }, 1000);
     } else {
       clearInterval(interval);
@@ -23,13 +23,13 @@ export default function Index() {
   }
 
   const handleReset = () => {
-    setTime(0);
+    setTime(100);
     setIsRunning(false);
   }
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Text>{time}</Text>
+      <Text>{formatTime(time)}</Text>
       <TouchableOpacity onPress={handleStartStop}>
         <Text>{isRunning ? "Stop" : "Start"}</Text>
       </TouchableOpacity>
@@ -39,6 +39,12 @@ export default function Index() {
     </GestureHandlerRootView>
   );
 }
+
+const formatTime = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+};
 
 const styles = StyleSheet.create({
   container: {

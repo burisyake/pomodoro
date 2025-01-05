@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function TimerLayout() {
   return (
@@ -6,6 +7,7 @@ export default function TimerLayout() {
       screenOptions={{
         tabBarPosition: 'top',
         tabBarActiveTintColor: "#ffd33d",
+        headerShown: false,
         headerStyle: {
           backgroundColor: "#25292e",
         },
@@ -16,8 +18,32 @@ export default function TimerLayout() {
         },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Pomodoro' }} />
-      <Tabs.Screen name="countdown" options={{ title: 'Setting' }} />
+      <Tabs.Screen 
+        name="pomodoro"
+        options={{
+          title: 'Pomodoro',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+                name={focused ? "hourglass" : "hourglass-outline"}
+                color={color}
+                size={24}
+              />
+          ),
+        }}
+      />
+      <Tabs.Screen 
+        name="setting"
+        options={{
+          title: 'Setting',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+                name={focused ? "settings" : "settings-outline"}
+                color={color}
+                size={24}
+              />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
