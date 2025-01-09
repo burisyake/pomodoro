@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView, TextInput } from "react-native-gesture-handler";
-//import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SettingScreen() {
   const [inputTime, setInputTime] = useState("1500");
 
   const saveTime = async () => {
-    // await AsyncStorage.setItem
+    const parsedTime = parseInt(inputTime, 10);
+    await AsyncStorage.setItem("pomodoro_time", String(parsedTime));
+    alert("Time setting saved!");
   }
 
   return (

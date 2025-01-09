@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PomodoroScreen() {
   const [time, setTime] = useState(100);
   const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    async function loadTimeSetting () {
+      const storedTime = await AsyncStorage.getItem("pomodoro_time");
+      if (storedTime) {
+        setTime(parseInt(storedTime, 10));
+      }
+    }
+    loadTimeSetting();
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
