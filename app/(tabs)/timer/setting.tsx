@@ -8,9 +8,13 @@ export default function SettingScreen() {
 
   const saveTime = async () => {
     const parsedTime = parseInt(inputTime, 10);
-    await AsyncStorage.setItem("pomodoro_time", String(parsedTime));
-    alert("Time setting saved!");
-  }
+    if (!isNaN(parsedTime) && parsedTime > 0) {
+      await AsyncStorage.setItem("pomodoro_time", String(parsedTime));
+      alert("Time setting saved!");
+    } else {
+      alert("Please enter a valid number.");
+    }
+  };
 
   return (
     <GestureHandlerRootView style={styles.container}>
