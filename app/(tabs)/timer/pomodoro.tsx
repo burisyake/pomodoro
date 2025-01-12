@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 
 export default function PomodoroScreen() {
-  const [time, setTime] = useState(100);
+  const [time, setTime] = useState(1500);
   const [isRunning, setIsRunning] = useState(false);
 
   useFocusEffect(
