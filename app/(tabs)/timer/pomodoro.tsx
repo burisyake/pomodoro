@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
+import * as SQLite from 'expo-sqlite';
+
+const db = SQLite.openDatabaseSync("pomodoro.db");
 
 export default function PomodoroScreen() {
   const [time, setTime] = useState(1500);
@@ -11,18 +13,24 @@ export default function PomodoroScreen() {
   useFocusEffect(
     useCallback(() => {
       async function loadTimeSetting() {
-        const storedTime = await AsyncStorage.getItem("pomodoro_time");
-        if (storedTime) {
-          setTime(parseInt(storedTime, 10));
+        try {
+          const result = await db.getFirstAsync<{ value: string }>(
+            "SELECT value FROM settings WHERE key = 'pomodoro_time';"
+          );
+          if (result?.value) {
+            setTime(parseInt(result.value, 10));
+          }
+        } catch (error) {
+          console.error("Failed to load time setting:", error);
         }
       }
       loadTimeSetting();
     }, [])
-  )
+  );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if(isRunning){
+    if (isRunning) {
       interval = setInterval(() => {
         setTime((prevTime) => prevTime - 1);
       }, 1000);
@@ -34,12 +42,12 @@ export default function PomodoroScreen() {
 
   const handleStartStop = () => {
     setIsRunning((prev) => !prev);
-  }
+  };
 
   const handleReset = () => {
     setTime(100);
     setIsRunning(false);
-  }
+  };
 
   return (
     <GestureHandlerRootView style={styles.container}>
