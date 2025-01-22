@@ -7,30 +7,41 @@ import { settings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export default function PomodoroScreen() {
-  const [time, setTime] = useState(1500);
+  const [defaultTime, setDefaultTime] = useState(0);
+  const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       const loadTimeSetting = () => {
         try {
           const result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
-          if (result) {
-            setTime(parseInt(result.value, 10));
+          const startTimestampResult = db.select().from(settings).where(eq(settings.key, "pomodoro_start_timestamp")).get();
+          if (result && result.value) {
+            const defaultTime = parseInt(result.value, 10);
+            setDefaultTime(defaultTime);
+            if (startTimestampResult && startTimestampResult.value && isRunning) {
+              const elapsed = Math.floor((Date.now() - parseInt(startTimestampResult.value, 10)) / 1000);
+              const remaining = Math.max(defaultTime - elapsed, 0);
+              setTime(remaining);
+            } else if (!isRunning) {
+              setTime(defaultTime);
+            }
           }
         } catch (error) {
           console.error("Failed to load time setting:", error);
         }
       };
       loadTimeSetting();
-    }, [])
+    }, [isRunning])
   );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     if (isRunning) {
       interval = setInterval(() => {
-        setTime((prevTime) => prevTime - 1);
+        setTime((prevTime) => Math.max(prevTime - 1, 0));
       }, 1000);
     } else {
       clearInterval(interval);
@@ -39,12 +50,41 @@ export default function PomodoroScreen() {
   }, [isRunning]);
 
   const handleStartStop = () => {
+    if (!isRunning) {
+      const timestamp = Date.now();
+      setStartTime(timestamp);
+
+      try {
+        db.insert(settings)
+          .values({ key: "pomodoro_start_timestamp", value: String(timestamp) })
+          .onConflictDoUpdate({
+            target: settings.key,
+            set: { value: String(timestamp) },
+          })
+          .run();
+      } catch (error) {
+        console.error("Failed to save start timestamp:", error);
+      }
+    }
     setIsRunning((prev) => !prev);
   };
 
   const handleReset = () => {
-    setTime(100);
+    setTime(defaultTime);
     setIsRunning(false);
+    setStartTime(null);
+
+    try {
+      db.insert(settings)
+        .values({ key: "pomodoro_start_timestamp", value: null })
+        .onConflictDoUpdate({
+          target: settings.key,
+          set: { value: null },
+        })
+        .run();
+    } catch (error) {
+      console.error("Failed to reset start timestamp:", error);
+    }
   };
 
   return (
@@ -69,8 +109,8 @@ const formatTime = (seconds: number) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#25292e',
-    alignItems: 'center',
+    backgroundColor: "#25292e",
+    alignItems: "center",
   },
   text: {
     color: "#fff",
