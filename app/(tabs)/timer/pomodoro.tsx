@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState, useEffect, useCallback } from "react";
+import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFocusEffect } from "expo-router";
-import * as SQLite from 'expo-sqlite';
-
-const db = SQLite.openDatabaseSync("pomodoro.db");
+import { db } from "@/db/db";
+import { settings } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 export default function PomodoroScreen() {
   const [time, setTime] = useState(1500);
@@ -12,18 +12,16 @@ export default function PomodoroScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      async function loadTimeSetting() {
+      const loadTimeSetting = () => {
         try {
-          const result = await db.getFirstAsync<{ value: string }>(
-            "SELECT value FROM settings WHERE key = 'pomodoro_time';"
-          );
-          if (result?.value) {
+          const result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
+          if (result) {
             setTime(parseInt(result.value, 10));
           }
         } catch (error) {
           console.error("Failed to load time setting:", error);
         }
-      }
+      };
       loadTimeSetting();
     }, [])
   );
