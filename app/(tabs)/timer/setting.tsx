@@ -30,14 +30,15 @@ export default function SettingScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Text>Set Timer</Text>
+      <Text style={styles.text}>Set Timer</Text>
       <TextInput
         keyboardType="numeric"
         value={inputTime}
         onChangeText={setInputTime}
+        style={styles.text}
       />
       <TouchableOpacity onPress={saveTime}>
-        <Text>Save</Text>
+        <Text style={styles.text}>Save</Text>
       </TouchableOpacity>
     </GestureHandlerRootView>
   );
@@ -48,5 +49,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#25292e',
     alignItems: 'center',
+  },
+  text: {
+    color: "#fff",
   },
 });

@@ -49,12 +49,12 @@ export default function PomodoroScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Text>{formatTime(time)}</Text>
+      <Text style={styles.text}>{formatTime(time)}</Text>
       <TouchableOpacity onPress={handleStartStop}>
-        <Text>{isRunning ? "Stop" : "Start"}</Text>
+        <Text style={styles.text}>{isRunning ? "Stop" : "Start"}</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={handleReset}>
-        <Text>Reset</Text>
+        <Text style={styles.text}>Reset</Text>
       </TouchableOpacity>
     </GestureHandlerRootView>
   );
@@ -71,5 +71,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#25292e',
     alignItems: 'center',
+  },
+  text: {
+    color: "#fff",
   },
 });
