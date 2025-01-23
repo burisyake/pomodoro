@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   text: {
+    fontSize: 24,
     color: "#fff",
   },
 });
