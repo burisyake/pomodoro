@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Text, StyleSheet, TouchableOpacity } from "react-native";
+import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFocusEffect } from "expo-router";
 import { db } from "@/db/db";
@@ -89,13 +89,18 @@ export default function PomodoroScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <Text style={styles.text}>{formatTime(time)}</Text>
-      <TouchableOpacity onPress={handleStartStop}>
-        <Text style={styles.text}>{isRunning ? "Stop" : "Start"}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleReset}>
-        <Text style={styles.text}>Reset</Text>
-      </TouchableOpacity>
+      <Text style={styles.title}>Pomodoro Timer</Text>
+      <View style={styles.timerContainer}>
+        <Text style={styles.timer}>{formatTime(time)}</Text>
+      </View>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={handleStartStop} style={styles.button}>
+          <Text style={styles.buttonText}>{isRunning ? "Stop" : "Start"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleReset} style={styles.button}>
+          <Text style={styles.buttonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
     </GestureHandlerRootView>
   );
 }
@@ -110,10 +115,40 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#25292e",
+    justifyContent: "center",
     alignItems: "center",
+    padding: 16,
   },
-  text: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
+    color: "#fff",
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  timerContainer: {
+    backgroundColor: "#3a3a3a",
+    paddingVertical: 20,
+    paddingHorizontal: 40,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  timer: {
+    fontSize: 48,
+    color: "#fff",
+    textAlign: "center",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    gap: 16,
+  },
+  button: {
+    backgroundColor: "#696969",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  buttonText: {
+    fontSize: 18,
     color: "#fff",
   },
 });
