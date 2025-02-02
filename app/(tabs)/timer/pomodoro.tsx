@@ -10,23 +10,47 @@ export default function PomodoroScreen() {
   const [defaultTime, setDefaultTime] = useState(0);
   const [time, setTime] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [reStartFlag, setReStartFlag] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       const loadTimeSetting = () => {
         try {
-          const result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
+          let result;
+          result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
+          // 設定がない場合
+          if (!result) {
+            try {
+              db.insert(settings)
+                .values({ key: "pomodoro_time", value: "1500" }) // 25分
+                .onConflictDoUpdate({
+                  target: settings.key,
+                  set: { value: "1500" },
+                })
+                .run();
+              console.log("Inserted default pomodoro_time: 1500");
+            } catch (error) {
+              console.error("Failed to insert default pomodoro_time:", error);
+            }
+            result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
+          }
+          
           const startTimestampResult = db.select().from(settings).where(eq(settings.key, "pomodoro_start_timestamp")).get();
           if (result && result.value) {
             const defaultTime = parseInt(result.value, 10);
             setDefaultTime(defaultTime);
-            if (startTimestampResult && startTimestampResult.value && isRunning) {
+            if (startTimestampResult && startTimestampResult.value && isRunning && !reStartFlag) {
               const elapsed = Math.floor((Date.now() - parseInt(startTimestampResult.value, 10)) / 1000);
               const remaining = Math.max(defaultTime - elapsed, 0);
               setTime(remaining);
-            } else if (!isRunning) {
+              console.log("Remaining is : " + remaining)
+            } else if (!isRunning && startTime === null) {
               setTime(defaultTime);
+              console.log("Default Time is : " + defaultTime)
+            } else if (!isRunning && reStartFlag) {
+              setTime(time);
+              console.log("Time is : " + time)
             }
           }
         } catch (error) {
@@ -53,6 +77,7 @@ export default function PomodoroScreen() {
     if (!isRunning) {
       const timestamp = Date.now();
       setStartTime(timestamp);
+      setReStartFlag(true);
 
       try {
         db.insert(settings)
