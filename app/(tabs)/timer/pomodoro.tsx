@@ -7,11 +7,11 @@ import { settings } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export default function PomodoroScreen() {
-  const [defaultTime, setDefaultTime] = useState(0);
-  const [time, setTime] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [reStartFlag, setReStartFlag] = useState(false);
-  const [startTime, setStartTime] = useState<number | null>(null);
+  const [defaultPomodoroTime, setDefaultPomodoroTime] = useState(0);
+  const [pomodoroTime, setPomodoroTime] = useState(0);
+  const [isPomodoroRunning, setIsPomodoroRunning] = useState(false);
+  const [reStartPomodoroFlag, setReStartPomodoroFlag] = useState(false);
+  const [pomodoroStartTime, setPomodoroStartTime] = useState<number | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -36,21 +36,21 @@ export default function PomodoroScreen() {
             result = db.select().from(settings).where(eq(settings.key, "pomodoro_time")).get();
           }
           
-          const startTimestampResult = db.select().from(settings).where(eq(settings.key, "pomodoro_start_timestamp")).get();
+          const pomodoroStartTimestampResult = db.select().from(settings).where(eq(settings.key, "pomodoro_start_timestamp")).get();
           if (result && result.value) {
-            const defaultTime = parseInt(result.value, 10);
-            setDefaultTime(defaultTime);
-            if (startTimestampResult && startTimestampResult.value && isRunning && !reStartFlag) {
-              const elapsed = Math.floor((Date.now() - parseInt(startTimestampResult.value, 10)) / 1000);
-              const remaining = Math.max(defaultTime - elapsed, 0);
-              setTime(remaining);
+            const defaultPomodoroTime = parseInt(result.value, 10);
+            setDefaultPomodoroTime(defaultPomodoroTime);
+            if (pomodoroStartTimestampResult && pomodoroStartTimestampResult.value && isPomodoroRunning && !reStartPomodoroFlag) {
+              const elapsed = Math.floor((Date.now() - parseInt(pomodoroStartTimestampResult.value, 10)) / 1000);
+              const remaining = Math.max(defaultPomodoroTime - elapsed, 0);
+              setPomodoroTime(remaining);
               console.log("Remaining is : " + remaining)
-            } else if (!isRunning && startTime === null) {
-              setTime(defaultTime);
-              console.log("Default Time is : " + defaultTime)
-            } else if (!isRunning && reStartFlag) {
-              setTime(time);
-              console.log("Time is : " + time)
+            } else if (!isPomodoroRunning && pomodoroStartTime === null) {
+              setPomodoroTime(defaultPomodoroTime);
+              console.log("Default Time is : " + defaultPomodoroTime)
+            } else if (!isPomodoroRunning && reStartPomodoroFlag) {
+              setPomodoroTime(pomodoroTime);
+              console.log("Time is : " + pomodoroTime)
             }
           }
         } catch (error) {
@@ -58,26 +58,26 @@ export default function PomodoroScreen() {
         }
       };
       loadTimeSetting();
-    }, [isRunning])
+    }, [isPomodoroRunning])
   );
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
-    if (isRunning) {
+    if (isPomodoroRunning) {
       interval = setInterval(() => {
-        setTime((prevTime) => Math.max(prevTime - 1, 0));
+        setPomodoroTime((prevTime) => Math.max(prevTime - 1, 0));
       }, 1000);
     } else {
       clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [isRunning]);
+  }, [isPomodoroRunning]);
 
-  const handleStartStop = () => {
-    if (!isRunning) {
+  const handleStartStopPomodoro = () => {
+    if (!isPomodoroRunning) {
       const timestamp = Date.now();
-      setStartTime(timestamp);
-      setReStartFlag(true);
+      setPomodoroStartTime(timestamp);
+      setReStartPomodoroFlag(true);
 
       try {
         db.insert(settings)
@@ -91,13 +91,13 @@ export default function PomodoroScreen() {
         console.error("Failed to save start timestamp:", error);
       }
     }
-    setIsRunning((prev) => !prev);
+    setIsPomodoroRunning((prev) => !prev);
   };
 
-  const handleReset = () => {
-    setTime(defaultTime);
-    setIsRunning(false);
-    setStartTime(null);
+  const handleResetPomodoro = () => {
+    setPomodoroTime(defaultPomodoroTime);
+    setIsPomodoroRunning(false);
+    setPomodoroStartTime(null);
 
     try {
       db.insert(settings)
@@ -116,13 +116,13 @@ export default function PomodoroScreen() {
     <GestureHandlerRootView style={styles.container}>
       <Text style={styles.title}>Pomodoro Timer</Text>
       <View style={styles.timerContainer}>
-        <Text style={styles.timer}>{formatTime(time)}</Text>
+        <Text style={styles.timer}>{formatTime(pomodoroTime)}</Text>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={handleStartStop} style={styles.button}>
-          <Text style={styles.buttonText}>{isRunning ? "Stop" : "Start"}</Text>
+        <TouchableOpacity onPress={handleStartStopPomodoro} style={styles.button}>
+          <Text style={styles.buttonText}>{isPomodoroRunning ? "Stop" : "Start"}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleReset} style={styles.button}>
+        <TouchableOpacity onPress={handleResetPomodoro} style={styles.button}>
           <Text style={styles.buttonText}>Reset</Text>
         </TouchableOpacity>
       </View>
@@ -153,9 +153,9 @@ const styles = StyleSheet.create({
   timerContainer: {
     backgroundColor: "#3a3a3a",
     paddingVertical: 20,
-    paddingHorizontal: 40,
     borderRadius: 12,
     marginBottom: 24,
+    width: 180,
   },
   timer: {
     fontSize: 48,
