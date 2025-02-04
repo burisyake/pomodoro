@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import RNPickerSelect from "react-native-picker-select";
+import { Picker } from "@react-native-picker/picker";
 import { db } from "@/db/db";
 import { settings } from "@/db/schema";
 
@@ -51,129 +51,139 @@ export default function SettingScreen() {
   const generatePickerItems = (range: number) =>
     Array.from({ length: range }, (_, index) => ({
       label: String(index),
-      value: index,
+      value: String(index),
     }));
 
-    return (
-      <GestureHandlerRootView style={styles.container}>
-        <Text style={styles.title}>Set Timer</Text>
-  
-        <View style={styles.rowContainer}>
-          <Text style={styles.label}>Pomodoro</Text>
-          <View style={styles.pickerGroup}>
-            <RNPickerSelect
-              onValueChange={(value) => setPomodoroMinutes(value)}
-              items={generatePickerItems(61)}
-              value={pomodoroMinutes}
-              placeholder={{}}
-              style={{
-                inputIOS: styles.input,
-                inputAndroid: styles.input,
-              }}
-            />
-            <Text style={styles.colon}>:</Text>
-            <RNPickerSelect
-              onValueChange={(value) => setPomodoroSeconds(value)}
-              items={generatePickerItems(60)}
-              value={pomodoroSeconds}
-              placeholder={{}}
-              style={{
-                inputIOS: styles.input,
-                inputAndroid: styles.input,
-              }}
-            />
-          </View>
+  return (
+    <GestureHandlerRootView style={styles.container}>
+      <Text style={styles.title}>Set Timer</Text>
+
+      <View style={styles.rowContainer}>
+        <Text style={styles.label}>Pomodoro</Text>
+        <View style={styles.pickerGroup}>
+          <Picker
+            selectedValue={String(pomodoroMinutes)}
+            onValueChange={(itemValue) => setPomodoroMinutes(parseInt(itemValue, 10))}
+            mode="dropdown"
+            style={[styles.input]}
+            itemStyle={styles.itemStyle}
+          >
+            {generatePickerItems(61).map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+          </Picker>
+          <Text style={styles.colon}>:</Text>
+          <Picker
+            selectedValue={String(pomodoroSeconds)}
+            onValueChange={(itemValue) => setPomodoroSeconds(parseInt(itemValue, 10))}
+            mode="dropdown"
+            style={[styles.input]}
+            itemStyle={styles.itemStyle}
+          >
+            {generatePickerItems(60).map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+          </Picker>
         </View>
-  
-        <View style={styles.rowContainer}>
-          <Text style={styles.label}>Rest</Text>
-          <View style={styles.pickerGroup}>
-            <RNPickerSelect
-              onValueChange={(value) => setRestMinutes(value)}
-              items={generatePickerItems(26)}
-              value={restMinutes}
-              placeholder={{}}
-              style={{
-                inputIOS: styles.input,
-                inputAndroid: styles.input,
-              }}
-            />
-            <Text style={styles.colon}>:</Text>
-            <RNPickerSelect
-              onValueChange={(value) => setRestSeconds(value)}
-              items={generatePickerItems(60)}
-              value={restSeconds}
-              placeholder={{}}
-              style={{
-                inputIOS: styles.input,
-                inputAndroid: styles.input,
-              }}
-            />
-          </View>
+      </View>
+
+      <View style={styles.rowContainer}>
+        <Text style={styles.label}>Rest</Text>
+        <View style={styles.pickerGroup}>
+          <Picker
+            selectedValue={String(restMinutes)}
+            onValueChange={(itemValue) => setRestMinutes(parseInt(itemValue, 10))}
+            mode="dropdown"
+            style={[styles.input]}
+            itemStyle={styles.itemStyle}
+          >
+            {generatePickerItems(26).map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+          </Picker>
+          <Text style={styles.colon}>:</Text>
+          <Picker
+            selectedValue={String(restSeconds)}
+            onValueChange={(itemValue) => setRestSeconds(parseInt(itemValue, 10))}
+            mode="dropdown"
+            style={[styles.input]}
+            itemStyle={styles.itemStyle}
+          >
+            {generatePickerItems(60).map((item) => (
+              <Picker.Item key={item.value} label={item.label} value={item.value} />
+            ))}
+          </Picker>
         </View>
-  
-        <TouchableOpacity onPress={saveTime} style={styles.button}>
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
-      </GestureHandlerRootView>
-    );
-  }
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#25292e",
-      justifyContent: "center",
-      padding: 16,
-    },
-    title: {
-      fontSize: 28,
-      color: "#fff",
-      marginBottom: 12,
-      textAlign: "center",
-    },
-    rowContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginVertical: 2,
-    },
-    label: {
-      fontSize: 24,
-      color: "#fff",
-      flex: 1,
-    },
-    pickerGroup: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-end",
-      flex: 2,
-    },
-    colon: {
-      fontSize: 24,
-      color: "#fff",
-      marginHorizontal: 8,
-    },
-    input: {
-      fontSize: 24,
-      color: "#fff",
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-      borderBottomWidth: 1,
-      borderColor: "#fff",
-      textAlign: "center",
-      width: 100,
-    },
-    button: {
-      backgroundColor: "#696969",
-      paddingVertical: 12,
-      paddingHorizontal: 24,
-      borderRadius: 8,
-      marginTop: 32,
-      alignSelf: "center",
-    },
-    buttonText: {
-      fontSize: 18,
-      color: "#fff",
-    },
-  });
+      </View>
+
+      <TouchableOpacity onPress={saveTime} style={styles.button}>
+        <Text style={styles.buttonText}>Save</Text>
+      </TouchableOpacity>
+    </GestureHandlerRootView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    padding: 16,
+  },
+  title: {
+    fontSize: 28,
+    color: "#fff",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  rowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 2,
+  },
+  label: {
+    fontSize: 24,
+    color: "#fff",
+    flex: 1,
+    alignItems: "center",
+  },
+  pickerGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    flex: 2,
+  },
+  colon: {
+    fontSize: 24,
+    color: "#fff",
+    marginHorizontal: 8,
+  },
+  input: {
+    fontSize: 24,
+    color: "#fff",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderColor: "#fff",
+    textAlign: "center",
+    width: 100,
+    height: 120,
+  },
+  itemStyle: {
+    fontSize: 24,
+    height: 120,
+    color: "#fff",
+  },
+  button: {
+    backgroundColor: "#696969",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 32,
+    alignSelf: "center",
+  },
+  buttonText: {
+    fontSize: 18,
+    color: "#fff",
+  },
+});
