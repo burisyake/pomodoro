@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Text, StyleSheet, TouchableOpacity, View, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFocusEffect } from "expo-router";
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import { db } from "@/db/db";
 import { settings } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,13 +12,17 @@ export default function PomodoroScreen() {
   const [defaultPomodoroTime, setDefaultPomodoroTime] = useState(1500); // 25分
   const [pomodoroTime, setPomodoroTime] = useState(1500);
   const [isPomodoroRunning, setIsPomodoroRunning] = useState(false);
-  const [reStartPomodoroFlag, setReStartPomodoroFlag] = useState(false);
+  const [restartPomodoroFlag, setRestartPomodoroFlag] = useState(false);
   const [pomodoroStartTime, setPomodoroStartTime] = useState<number | null>(null);
 
   // 休憩用の状態
   const [restTime, setRestTime] = useState(300); // 5分
   const [isRestRunning, setIsRestRunning] = useState(false);
   const [restStartTime, setRestStartTime] = useState<number | null>(null); // 休憩開始時のタイムスタンプ
+
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,7 +33,7 @@ export default function PomodoroScreen() {
           if (resultPomodoro && resultPomodoro.value) {
             const defaultPomodoroTime = parseInt(resultPomodoro.value, 10);
             setDefaultPomodoroTime(defaultPomodoroTime);
-            if (pomodoroStartTimestampResult && pomodoroStartTimestampResult.value && isPomodoroRunning && !reStartPomodoroFlag) {
+            if (pomodoroStartTimestampResult && pomodoroStartTimestampResult.value && isPomodoroRunning && !restartPomodoroFlag) {
               const elapsed = Math.floor((Date.now() - parseInt(pomodoroStartTimestampResult.value, 10)) / 1000);
               const remaining = Math.max(defaultPomodoroTime - elapsed, 0);
               setPomodoroTime(remaining);
@@ -35,7 +41,7 @@ export default function PomodoroScreen() {
             } else if (!isPomodoroRunning && pomodoroStartTime === null) {
               setPomodoroTime(defaultPomodoroTime);
               console.log("Default Time is : " + defaultPomodoroTime)
-            } else if (!isPomodoroRunning && reStartPomodoroFlag) {
+            } else if (!isPomodoroRunning && restartPomodoroFlag) {
               setPomodoroTime(pomodoroTime);
               console.log("Time is : " + pomodoroTime)
             }
@@ -75,6 +81,7 @@ export default function PomodoroScreen() {
       }, 1000);
     } else if (pomodoroTime === 0 && !isRestRunning) {
       // Pomodoroが終了したら休憩開始
+      sendPushNotification("Pomodoro終了", "休憩を開始してください！");
       startRest();
     }
 
@@ -90,6 +97,7 @@ export default function PomodoroScreen() {
       }, 1000);
     } else if (restTime === 0) {
       // 休憩が終わったら初期状態に戻す
+      sendPushNotification("休憩終了", "ポモドーロを再開してください！");
       resetToInitialState();
     }
 
@@ -128,7 +136,7 @@ export default function PomodoroScreen() {
       if (!isPomodoroRunning) {
         const timestamp = Date.now();
         setPomodoroStartTime(timestamp);
-        setReStartPomodoroFlag(true);
+        setRestartPomodoroFlag(true);
 
         try {
           db.insert(settings)
@@ -261,3 +269,46 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
+
+// 通知の権限リクエスト
+async function registerForPushNotificationsAsync() {
+  console.log("registerForPushNotificationsAsyncが実行されました。");
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("プッシュ通知の権限がありません！");
+      return;
+    }
+    const token = await Notifications.getExpoPushTokenAsync();
+    console.log("Expo Push Token:", token);
+    // ✅ Android の通知チャンネルを作成
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "Default",
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+  } else {
+    alert("プッシュ通知は実機でのみ動作します！");
+  }
+}
+
+// 通知を送信
+async function sendPushNotification(title: string, body: string) {
+  console.log("sendPushNotification()が実行されました");
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title,
+      body,
+      sound: true,
+    },
+    trigger: null
+  });
+}
