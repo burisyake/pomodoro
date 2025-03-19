@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Text, View, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { db } from "@/db/db";
@@ -6,6 +6,7 @@ import { pomodoro_logs } from "@/db/schema";
 import { and, gt, lt } from "drizzle-orm";
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, addMonths } from "date-fns";
 import { ja } from "date-fns/locale";
+import { useFocusEffect } from "expo-router";
 
 export default function LogScreen() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -15,7 +16,7 @@ export default function LogScreen() {
     fetchLogData();
   }, [currentMonth]);
 
-  const fetchLogData = () => {
+  const fetchLogData = useCallback(() => {
     const startDate = format(startOfMonth(currentMonth), "yyyy-MM-dd");
     const endDate = format(endOfMonth(currentMonth), "yyyy-MM-dd");
     const logs = db.select().from(pomodoro_logs).where(and(gt(pomodoro_logs.date, startDate), lt(pomodoro_logs.date, endDate))).all();
@@ -24,7 +25,14 @@ export default function LogScreen() {
       return acc;
     }, {} as Record<string, number>);
     setLogData(data);
-  };
+  }, [currentMonth]);
+
+  // 画面フォーカス時に最新のデータを取得
+  useFocusEffect(
+    useCallback(() => {
+      fetchLogData();
+    }, [fetchLogData])
+  );
 
   const changeMonth = (direction: string) => {
     setCurrentMonth((prev) =>
@@ -63,6 +71,7 @@ export default function LogScreen() {
           <View style={styles.dayContainer}>
             <Text style={styles.dateText}>{item.display}</Text>
             {item.count > 0 && <Text style={styles.countText}>{item.count}</Text>}
+            {item.count == 0 && <Text style={styles.countText}></Text>}
           </View>
         )}
       />

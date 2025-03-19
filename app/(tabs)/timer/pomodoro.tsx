@@ -65,7 +65,7 @@ export default function PomodoroScreen() {
         }
       };
       loadTimeSetting();
-    }, [isPomodoroRunning])
+    }, [isPomodoroRunning, isRestRunning])
   );
 
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function PomodoroScreen() {
       if (existingLog) {
         // 既にログがある場合は count を +1
         db.update(pomodoro_logs)
-          .set({ count: existingLog.count + 1 })
+          .set({ count: Number(existingLog.count) + 1 })
           .where(eq(pomodoro_logs.date, today))
           .run();
       } else {

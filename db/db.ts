@@ -8,10 +8,6 @@ const sqlite = SQLite.openDatabaseSync("pomodoro.db");
 // Drizzle ORM インスタンス
 export const db = drizzle(sqlite);
 
-// テーブルを削除
-db.run(`DROP TABLE IF EXISTS settings;`);
-db.run(`DROP TABLE IF EXISTS pomodoro_logs;`);
-
 // テーブルの初期化
 db.run(
   `CREATE TABLE IF NOT EXISTS settings (
