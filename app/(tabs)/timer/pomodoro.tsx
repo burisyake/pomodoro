@@ -3,8 +3,9 @@ import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFocusEffect } from "expo-router";
 import { db } from "@/db/db";
-import { settings } from "@/db/schema";
+import { settings, pomodoro_logs } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { format } from "date-fns";
 
 export default function PomodoroScreen() {
   const [defaultPomodoroTime, setDefaultPomodoroTime] = useState(1500); // 25分
@@ -64,7 +65,7 @@ export default function PomodoroScreen() {
         }
       };
       loadTimeSetting();
-    }, [isPomodoroRunning])
+    }, [isPomodoroRunning, isRestRunning])
   );
 
   useEffect(() => {
@@ -74,8 +75,10 @@ export default function PomodoroScreen() {
         setPomodoroTime((prevTime) => Math.max(prevTime - 1, 0));
       }, 1000);
     } else if (pomodoroTime === 0 && !isRestRunning) {
-      // Pomodoroが終了したら休憩開始
+      // Pomodoro終了、休憩開始
       startRest();
+      // Logに完了日時を記録
+      logPomodoroCompletion();
     }
 
     return () => clearInterval(interval);
@@ -178,6 +181,34 @@ export default function PomodoroScreen() {
         .run();
     } catch (error) {
       console.error("Failed to reset timestamp:", error);
+    }
+  };
+
+  const logPomodoroCompletion = () => {
+    const today = format(new Date(), "yyyy-MM-dd");
+  
+    try {
+      // 既存のログを取得
+      const existingLog = db
+        .select()
+        .from(pomodoro_logs)
+        .where(eq(pomodoro_logs.date, today))
+        .get();
+  
+      if (existingLog) {
+        // 既にログがある場合は count を +1
+        db.update(pomodoro_logs)
+          .set({ count: Number(existingLog.count) + 1 })
+          .where(eq(pomodoro_logs.date, today))
+          .run();
+      } else {
+        // まだログがない場合は新規作成
+        db.insert(pomodoro_logs)
+          .values({ date: today, count: 1 })
+          .run();
+      }
+    } catch (error) {
+      console.error("Failed to log Pomodoro completion:", error);
     }
   };
 
