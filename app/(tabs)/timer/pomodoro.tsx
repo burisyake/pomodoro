@@ -32,13 +32,10 @@ export default function PomodoroScreen() {
               const elapsed = Math.floor((Date.now() - parseInt(pomodoroStartTimestampResult.value, 10)) / 1000);
               const remaining = Math.max(defaultPomodoroTime - elapsed, 0);
               setPomodoroTime(remaining);
-              console.log("Remaining is : " + remaining)
             } else if (!isPomodoroRunning && pomodoroStartTime === null) {
               setPomodoroTime(defaultPomodoroTime);
-              console.log("Default Time is : " + defaultPomodoroTime)
             } else if (!isPomodoroRunning && reStartPomodoroFlag) {
               setPomodoroTime(pomodoroTime);
-              console.log("Time is : " + pomodoroTime)
             }
           }
           let resultRest = db.select().from(settings).where(eq(settings.key, "rest_time")).get();

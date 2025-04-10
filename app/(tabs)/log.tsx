@@ -47,23 +47,19 @@ export default function LogScreen() {
 
     // 月初の日付の曜日を取得（0=日曜日, 1=月曜日, ..., 6=土曜日）
     const firstDayOfMonth = start.getDay(); // 月の最初の日が何曜日か
-    console.log('firstDayOfMonth', firstDayOfMonth);
 
     // 月初の日付の曜日に合わせて前に空白の日を追加
     // 月曜日が0、日曜日が6になるように調整
     const paddingDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
-    console.log('paddingDays', paddingDays);
 
     // カレンダーの日付を作成
-    const temp = [...Array(paddingDays).fill(null), ...days].map((date) => {
+    return [...Array(paddingDays).fill(null), ...days].map((date) => {
       return date ? {
         date: format(date, "yyyy-MM-dd"),
         display: format(date, "d", { locale: ja }),
         count: logData[format(date, "yyyy-MM-dd")] || 0,
       } : null;
     });
-    console.log(temp);
-    return temp;
   };
 
   return (
