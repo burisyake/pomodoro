@@ -69,7 +69,8 @@ export default function DashBoardScreen() {
       const weekCount = result.filter(item => item.date >= firstDayOfThisWeek).reduce((sum, item) => sum + Number(item.count), 0);
       setWeekPomodoro(weekCount);
       // 今週の平均
-      setWeekAveragePomodoro(Math.round((weekCount / 7) * 10) / 10);
+      const daysSinceMonday = (_today.getDate() - _firstDayOfThisWeek.getDate() + 1); // 月曜日から今日までの経過日数
+      setWeekAveragePomodoro(Math.round((weekCount / daysSinceMonday) * 10) / 10);
       // 今週の最高
       const weekMaxCount = result.filter(item => item.date >= firstDayOfThisWeek).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setWeekMaxPomodoro(weekMaxCount);
@@ -77,7 +78,8 @@ export default function DashBoardScreen() {
       const monthCount = result.filter(item => item.date >= firstDayOfThisMonth).reduce((sum, item) => sum + Number(item.count), 0);
       setMonthPomodoro(monthCount);
       // 今月の平均
-      setMonthAveragePomodoro(Math.round((monthCount / 30) * 10) / 10);
+      const daysSinceFirstDayOfThisMonth = (_today.getDate() - _firstDayOfThisMonth.getDate() + 1); // 今月1日から今日までの経過日数
+      setMonthAveragePomodoro(Math.round((monthCount / daysSinceFirstDayOfThisMonth) * 10) / 10);
       // 今月の最高
       const monthMaxCount = result.filter(item => item.date >= firstDayOfThisMonth).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setMonthMaxPomodoro(monthMaxCount);
@@ -85,7 +87,8 @@ export default function DashBoardScreen() {
       const yearCount = result.filter(item => item.date >= firstDayOfThisYear).reduce((sum, item) => sum + Number(item.count), 0);
       setYearPomodoro(yearCount);
       // 今年の平均
-      setYearAveragePomodoro(Math.round((yearCount / 365) * 10) / 10);
+      const daysSinceFirstDayOfThisYear = Math.floor((_today.getTime() - _firstDayOfThisYear.getTime()) / (1000 * 60 * 60 * 24));
+      setYearAveragePomodoro(Math.round((yearCount / daysSinceFirstDayOfThisYear) * 10) / 10);
       // 今年の最高
       const yearMaxCount = result.filter(item => item.date >= firstDayOfThisYear).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setYearMaxPomodoro(yearMaxCount);
