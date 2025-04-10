@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { db } from '@/db/db'; // db.tsからインポート
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { pomodoro_logs } from '@/db/schema';
@@ -22,6 +22,7 @@ export default function DashBoardScreen() {
   const [totalPomodoro, setTotalPomodoro] = useState<number>(99); // 累計Pomodoro数
   const [totalAveragePomodoro, setTotalAveragePomodoro] = useState<number>(99); // 過去の平均Pomodoro数
   const [totalMaxPomodoro, setTotalMaxPomodoro] = useState<number>(99); // 過去の最高Pomodoro数
+
   // 今日
   const _today = new Date();
   const today = new Date().toLocaleDateString('en-CA');
@@ -68,7 +69,8 @@ export default function DashBoardScreen() {
       const weekCount = result.filter(item => item.date >= firstDayOfThisWeek).reduce((sum, item) => sum + Number(item.count), 0);
       setWeekPomodoro(weekCount);
       // 今週の平均
-      setWeekAveragePomodoro(Math.round((weekCount / 7) * 10) / 10);
+      const daysSinceMonday = (_today.getDate() - _firstDayOfThisWeek.getDate() + 1); // 月曜日から今日までの経過日数
+      setWeekAveragePomodoro(Math.round((weekCount / daysSinceMonday) * 10) / 10);
       // 今週の最高
       const weekMaxCount = result.filter(item => item.date >= firstDayOfThisWeek).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setWeekMaxPomodoro(weekMaxCount);
@@ -76,7 +78,8 @@ export default function DashBoardScreen() {
       const monthCount = result.filter(item => item.date >= firstDayOfThisMonth).reduce((sum, item) => sum + Number(item.count), 0);
       setMonthPomodoro(monthCount);
       // 今月の平均
-      setMonthAveragePomodoro(Math.round((monthCount / 30) * 10) / 10);
+      const daysSinceFirstDayOfThisMonth = (_today.getDate() - _firstDayOfThisMonth.getDate() + 1); // 今月1日から今日までの経過日数
+      setMonthAveragePomodoro(Math.round((monthCount / daysSinceFirstDayOfThisMonth) * 10) / 10);
       // 今月の最高
       const monthMaxCount = result.filter(item => item.date >= firstDayOfThisMonth).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setMonthMaxPomodoro(monthMaxCount);
@@ -84,7 +87,8 @@ export default function DashBoardScreen() {
       const yearCount = result.filter(item => item.date >= firstDayOfThisYear).reduce((sum, item) => sum + Number(item.count), 0);
       setYearPomodoro(yearCount);
       // 今年の平均
-      setYearAveragePomodoro(Math.round((yearCount / 365) * 10) / 10);
+      const daysSinceFirstDayOfThisYear = Math.floor((_today.getTime() - _firstDayOfThisYear.getTime()) / (1000 * 60 * 60 * 24));
+      setYearAveragePomodoro(Math.round((yearCount / daysSinceFirstDayOfThisYear) * 10) / 10);
       // 今年の最高
       const yearMaxCount = result.filter(item => item.date >= firstDayOfThisYear).reduce((max, item) => Math.max(max, Number(item.count)), 0);
       setYearMaxPomodoro(yearMaxCount);
@@ -92,9 +96,11 @@ export default function DashBoardScreen() {
       const totalCount = result.reduce((sum, item) => sum + Number(item.count), 0);
       setTotalPomodoro(totalCount);
       // 過去の平均
-      const firstPomodoroDate: Date = new Date(result.reduce((oldest, item) => {
-        return new Date(item.date) < new Date(oldest.date) ? item : oldest; // 一番最初のPomodoroの完了日を取得
-      }, result[0]).date);
+      const firstPomodoroDate: Date = new Date(result.filter(item => item && item.date).reduce((oldest, item) => {
+          return item && new Date(item.date) < new Date(oldest.date) ? item : oldest;// 一番最初のPomodoroの完了日を取得
+        }, { date: '2000-01-01' })
+        .date
+      );
       const totalMilliTime = new Date().getTime() - firstPomodoroDate.getTime(); // 何日前かを計算(ミリ秒単位)
       const totalDays = Math.floor(totalMilliTime / (1000 * 60 * 60 * 24)); // 単位をミリ秒から日に変換
       setTotalAveragePomodoro(Math.round((yearCount / totalDays) * 10) / 10);
@@ -111,79 +117,114 @@ export default function DashBoardScreen() {
     }, [fetchPomodoroCount])
   );
 
+  // 色を変更する関数
+  const getColor = (value: number, reference: number) => {
+    return value >= reference ? 'salmon' : '#fff';
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>{`${_today.getFullYear()}年 ${_today.getMonth() + 1}月${_today.getDate()}日 ${['日', '月', '火', '水', '木', '金', '土'][_today.getDay()]}曜日`}</Text>
+      {/* 今日 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今日</Text>
-          <Text style={styles.statValue}>{todayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(todayPomodoro, monthAveragePomodoro) }]}>{todayPomodoro}回</Text>
         </View>
+
+        {/* 昨日 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>昨日</Text>
-          <Text style={styles.statValue}>{yesterdayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yesterdayPomodoro, monthAveragePomodoro) }]}>{yesterdayPomodoro}回</Text>
         </View>
+
+        {/* 一昨日 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>一昨日</Text>
-          <Text style={styles.statValue}>{theDayBeforeYesterdayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(theDayBeforeYesterdayPomodoro, monthAveragePomodoro) }]}>{theDayBeforeYesterdayPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今週 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今週</Text>
-          <Text style={styles.statValue}>{weekPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(weekPomodoro, 3) }]}>{weekPomodoro}回</Text>
         </View>
+
+        {/* 今週の平均 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今週の平均</Text>
-          <Text style={styles.statValue}>{weekAveragePomodoro}回</Text>
+          <Text style={styles.statLabel}>今週(平均)</Text>
+          <Text style={[styles.statValue, { color: getColor(weekAveragePomodoro, monthAveragePomodoro) }]}>{weekAveragePomodoro}回</Text>
         </View>
+
+        {/* 今週の最高 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今週の最高</Text>
-          <Text style={styles.statValue}>{weekMaxPomodoro}回</Text>
+          <Text style={styles.statLabel}>今週(最高)</Text>
+          <Text style={[styles.statValue, { color: getColor(weekMaxPomodoro, 1) }]}>{weekMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今月 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今月</Text>
-          <Text style={styles.statValue}>{monthPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(monthPomodoro, 1) }]}>{monthPomodoro}回</Text>
         </View>
+
+        {/* 今月の平均 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今月の平均</Text>
-          <Text style={styles.statValue}>{monthAveragePomodoro}回</Text>
+          <Text style={styles.statLabel}>今月(平均)</Text>
+          <Text style={[styles.statValue, { color: getColor(monthAveragePomodoro, yearAveragePomodoro) }]}>{monthAveragePomodoro}回</Text>
         </View>
+
+        {/* 今月の最高 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今月の最高</Text>
-          <Text style={styles.statValue}>{monthMaxPomodoro}回</Text>
+          <Text style={styles.statLabel}>今月(最高)</Text>
+          <Text style={[styles.statValue, { color: getColor(monthMaxPomodoro, 1) }]}>{monthMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今年 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今年</Text>
-          <Text style={styles.statValue}>{yearPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yearPomodoro, 1) }]}>{yearPomodoro}回</Text>
         </View>
+
+       {/* 今年の平均 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今年の平均</Text>
-          <Text style={styles.statValue}>{yearAveragePomodoro}回</Text>
+          <Text style={styles.statLabel}>今年(平均)</Text>
+          <Text style={[styles.statValue, { color: getColor(yearAveragePomodoro, 1) }]}>{yearAveragePomodoro}回</Text>
         </View>
+
+        {/* 今年の最高 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>今年の最高</Text>
-          <Text style={styles.statValue}>{yearMaxPomodoro}回</Text>
+          <Text style={styles.statLabel}>今年(最高)</Text>
+          <Text style={[styles.statValue, { color: getColor(yearMaxPomodoro, totalAveragePomodoro) }]}>{yearMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 累計 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>累計</Text>
-          <Text style={styles.statValue}>{totalPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(totalPomodoro, 1) }]}>{totalPomodoro}回</Text>
         </View>
+
+        {/* 過去の平均 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>過去の平均</Text>
-          <Text style={styles.statValue}>{totalAveragePomodoro}回</Text>
+          <Text style={styles.statLabel}>過去(平均)</Text>
+          <Text style={[styles.statValue, { color: getColor(totalAveragePomodoro, 1) }]}>{totalAveragePomodoro}回</Text>
         </View>
+
+        {/* 過去の最高 */}
         <View style={styles.statCard}>
-          <Text style={styles.statLabel}>過去の最高</Text>
-          <Text style={styles.statValue}>{totalMaxPomodoro}回</Text>
+          <Text style={styles.statLabel}>過去(最高)</Text>
+          <Text style={[styles.statValue, { color: getColor(totalMaxPomodoro, 0) }]}>{totalMaxPomodoro}回</Text>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -191,24 +232,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#25292e',
-    padding: 20,
+    padding: 15,
   },
   title: {
-    fontSize: 32,
+    fontSize: 20,
     color: '#fff',
-    marginBottom: 30,
-    textAlign: 'center',
+    marginBottom: 20,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: 13,
   },
   statCard: {
     backgroundColor: '#3a3a3a',
     padding: 20,
     borderRadius: 8,
-    width: '30%',
+    width: '31%',
     alignItems: 'center',
   },
   statLabel: {
