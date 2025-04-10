@@ -15,6 +15,8 @@ export default function TimerLayout() {
         headerTintColor: "#fff",
         tabBarStyle: {
           backgroundColor: "#25292e",
+          height: 60,
+          paddingTop: 4,
         },
       }}
     >
@@ -26,7 +28,7 @@ export default function TimerLayout() {
             <Ionicons
                 name={focused ? "hourglass" : "hourglass-outline"}
                 color={color}
-                size={24}
+                size={20}
               />
           ),
         }}
@@ -39,7 +41,7 @@ export default function TimerLayout() {
             <Ionicons
                 name={focused ? "settings" : "settings-outline"}
                 color={color}
-                size={24}
+                size={20}
               />
           ),
         }}
