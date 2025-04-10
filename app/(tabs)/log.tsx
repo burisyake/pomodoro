@@ -4,7 +4,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { db } from "@/db/db";
 import { pomodoro_logs } from "@/db/schema";
 import { and, gt, lt } from "drizzle-orm";
-import { startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, addMonths } from "date-fns";
+import { startOfMonth, endOfMonth, eachDayOfInterval, format, subMonths, addMonths, startOfWeek } from "date-fns";
 import { ja } from "date-fns/locale";
 import { useFocusEffect } from "expo-router";
 
@@ -43,13 +43,27 @@ export default function LogScreen() {
   const generateCalendarDays = () => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
-    return eachDayOfInterval({ start, end }).map((date) => {
-      return {
+    const days = eachDayOfInterval({ start, end });
+
+    // 月初の日付の曜日を取得（0=日曜日, 1=月曜日, ..., 6=土曜日）
+    const firstDayOfMonth = start.getDay(); // 月の最初の日が何曜日か
+    console.log('firstDayOfMonth', firstDayOfMonth);
+
+    // 月初の日付の曜日に合わせて前に空白の日を追加
+    // 月曜日が0、日曜日が6になるように調整
+    const paddingDays = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
+    console.log('paddingDays', paddingDays);
+
+    // カレンダーの日付を作成
+    const temp = [...Array(paddingDays).fill(null), ...days].map((date) => {
+      return date ? {
         date: format(date, "yyyy-MM-dd"),
         display: format(date, "d", { locale: ja }),
         count: logData[format(date, "yyyy-MM-dd")] || 0,
-      };
+      } : null;
     });
+    console.log(temp);
+    return temp;
   };
 
   return (
@@ -63,17 +77,39 @@ export default function LogScreen() {
           <Text style={styles.navButton}>＞</Text>
         </TouchableOpacity>
       </View>
+
+      {/* 曜日の表示 */}
+      <View style={styles.weekRow}>
+        {["月", "火", "水", "木", "金", "土", "日"].map((day, index) => {
+          const isSaturday = index === 5; // 土曜日
+          const isSunday = index === 6; // 日曜日
+          return (
+            <View key={index} style={styles.dayOfWeek}>
+              <Text style={[styles.weekDayText, isSaturday && styles.saturday, isSunday && styles.sunday]}>
+                {day}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* カレンダーの日付表示 */}
       <FlatList
         data={generateCalendarDays()}
-        keyExtractor={(item) => item.date}
+        keyExtractor={(item) => item ? item.date : ''}
         numColumns={7}
-        renderItem={({ item }) => (
-          <View style={styles.dayContainer}>
-            <Text style={styles.dateText}>{item.display}</Text>
-            {item.count > 0 && <Text style={styles.countText}>{item.count}</Text>}
-            {item.count == 0 && <Text style={styles.countText}></Text>}
-          </View>
-        )}
+        renderItem={({ item }) => {
+          if (item === null) {
+            return <View style={styles.dayContainer} />;
+          }
+          return(
+            <View style={styles.dayContainer}>
+              <Text style={styles.dateText}>{item.display}</Text>
+              {item.count > 0 && <Text style={styles.countText}>{item.count}</Text>}
+              {item.count === 0 && <Text style={styles.countText}></Text>}
+            </View>
+          );
+        }}
       />
     </GestureHandlerRootView>
   );
@@ -98,6 +134,26 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 20,
     color: "#fff",
+  },
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  dayOfWeek: {
+    width: "14.2%",
+    alignItems: "center",
+  },
+  weekDayText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+  saturday: {
+    color: 'deepskyblue',
+  },
+  sunday: {
+    color: 'salmon',
   },
   dayContainer: {
     width: "14.2%",
