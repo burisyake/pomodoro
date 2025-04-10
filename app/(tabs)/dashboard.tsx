@@ -22,6 +22,7 @@ export default function DashBoardScreen() {
   const [totalPomodoro, setTotalPomodoro] = useState<number>(99); // 累計Pomodoro数
   const [totalAveragePomodoro, setTotalAveragePomodoro] = useState<number>(99); // 過去の平均Pomodoro数
   const [totalMaxPomodoro, setTotalMaxPomodoro] = useState<number>(99); // 過去の最高Pomodoro数
+
   // 今日
   const _today = new Date();
   const today = new Date().toLocaleDateString('en-CA');
@@ -111,76 +112,110 @@ export default function DashBoardScreen() {
     }, [fetchPomodoroCount])
   );
 
+  // 色を変更する関数
+  const getColor = (value: number, reference: number) => {
+    return value >= reference ? 'salmon' : '#fff';
+  };
+
   return (
     <View style={styles.container}>
+      {/* 今日 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今日</Text>
-          <Text style={styles.statValue}>{todayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(todayPomodoro, monthAveragePomodoro) }]}>{todayPomodoro}回</Text>
         </View>
+
+        {/* 昨日 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>昨日</Text>
-          <Text style={styles.statValue}>{yesterdayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yesterdayPomodoro, monthAveragePomodoro) }]}>{yesterdayPomodoro}回</Text>
         </View>
+
+        {/* 一昨日 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>一昨日</Text>
-          <Text style={styles.statValue}>{theDayBeforeYesterdayPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(theDayBeforeYesterdayPomodoro, monthAveragePomodoro) }]}>{theDayBeforeYesterdayPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今週 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今週</Text>
-          <Text style={styles.statValue}>{weekPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(weekPomodoro, 3) }]}>{weekPomodoro}回</Text>
         </View>
+
+        {/* 今週の平均 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今週の平均</Text>
-          <Text style={styles.statValue}>{weekAveragePomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(weekAveragePomodoro, monthAveragePomodoro) }]}>{weekAveragePomodoro}回</Text>
         </View>
+
+        {/* 今週の最高 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今週の最高</Text>
-          <Text style={styles.statValue}>{weekMaxPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(weekMaxPomodoro, 1) }]}>{weekMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今月 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今月</Text>
-          <Text style={styles.statValue}>{monthPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(monthPomodoro, 1) }]}>{monthPomodoro}回</Text>
         </View>
+
+        {/* 今月の平均 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今月の平均</Text>
-          <Text style={styles.statValue}>{monthAveragePomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(monthAveragePomodoro, yearAveragePomodoro) }]}>{monthAveragePomodoro}回</Text>
         </View>
+
+        {/* 今月の最高 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今月の最高</Text>
-          <Text style={styles.statValue}>{monthMaxPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(monthMaxPomodoro, 1) }]}>{monthMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 今年 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今年</Text>
-          <Text style={styles.statValue}>{yearPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yearPomodoro, 1) }]}>{yearPomodoro}回</Text>
         </View>
+
+       {/* 今年の平均 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今年の平均</Text>
-          <Text style={styles.statValue}>{yearAveragePomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yearAveragePomodoro, 1) }]}>{yearAveragePomodoro}回</Text>
         </View>
+
+        {/* 今年の最高 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>今年の最高</Text>
-          <Text style={styles.statValue}>{yearMaxPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(yearMaxPomodoro, totalAveragePomodoro) }]}>{yearMaxPomodoro}回</Text>
         </View>
       </View>
+
+      {/* 累計 */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>累計</Text>
-          <Text style={styles.statValue}>{totalPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(totalPomodoro, 1) }]}>{totalPomodoro}回</Text>
         </View>
+
+        {/* 過去の平均 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>過去の平均</Text>
-          <Text style={styles.statValue}>{totalAveragePomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(totalAveragePomodoro, 1) }]}>{totalAveragePomodoro}回</Text>
         </View>
+
+        {/* 過去の最高 */}
         <View style={styles.statCard}>
           <Text style={styles.statLabel}>過去の最高</Text>
-          <Text style={styles.statValue}>{totalMaxPomodoro}回</Text>
+          <Text style={[styles.statValue, { color: getColor(totalMaxPomodoro, 0) }]}>{totalMaxPomodoro}回</Text>
         </View>
       </View>
     </View>
