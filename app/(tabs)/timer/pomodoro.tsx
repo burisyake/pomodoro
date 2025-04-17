@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Text, StyleSheet, TouchableOpacity, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFocusEffect } from "expo-router";
+import { Audio, AVPlaybackSource } from "expo-av";
 import { db } from "@/db/db";
 import { settings, pomodoro_logs } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -18,6 +19,16 @@ export default function PomodoroScreen() {
   const [restTime, setRestTime] = useState(300); // 5分
   const [isRestRunning, setIsRestRunning] = useState(false);
   const [restStartTime, setRestStartTime] = useState<number | null>(null); // 休憩開始時のタイムスタンプ
+
+  // アラーム音
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [restEndSound, setRestEndSound] = useState<Audio.Sound | null>(null);
+
+  const playSound = async (soundFile: AVPlaybackSource) => {
+    console.log('アラーム音を設定');
+    const { sound } = await Audio.Sound.createAsync(soundFile);
+    await sound.playAsync(); // 音声の再生
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -72,13 +83,20 @@ export default function PomodoroScreen() {
         setPomodoroTime((prevTime) => Math.max(prevTime - 1, 0));
       }, 1000);
     } else if (pomodoroTime === 0 && !isRestRunning) {
-      // Pomodoro終了、休憩開始
+      // Pomodoro終了のアラームを鳴らす
+      playSound(require('@/assets/alarm/bell2.mp3'));
+      // 休憩開始
       startRest();
       // Logに完了日時を記録
       logPomodoroCompletion();
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+      clearInterval(interval);
+    }
   }, [isPomodoroRunning, pomodoroTime]);
 
   useEffect(() => {
@@ -89,6 +107,8 @@ export default function PomodoroScreen() {
         setRestTime((prevTime) => Math.max(prevTime - 1, 0));
       }, 1000);
     } else if (restTime === 0) {
+      // 休憩終了のアラーム
+      playSound(require('@/assets/alarm/spring1.mp3'));
       // 休憩が終わったら初期状態に戻す
       resetToInitialState();
     }
